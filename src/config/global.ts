@@ -30,9 +30,9 @@ export const globalConfig = {
     aria: "Footer Navigation",
     copyright: "© 2025 Your Name. All rights reserved.",
     social: {
-      twitter: "https://x.com/TencentCloudEO",
-      github: "https://github.com/TencentEdgeOne",
-      email: "media_service@tencent.com"
+      twitter: "https://www.baidu.com",
+      github: "https://www.baidu.com/",
+      email: "your.email@example.com"
     }
   }
 } as const; 

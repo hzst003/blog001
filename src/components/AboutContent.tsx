@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Image from "next/image";
 import { aboutConfig } from "@/config/about";
 
@@ -68,18 +69,18 @@ export default function AboutContent() {
                 if (index === array.length - 1) {
                   const [beforeEmail, afterEmail] = part.split('email');
                   return (
-                    <>
+                    <Fragment key={index}>
                       {beforeEmail}
                       <a href={aboutConfig.connect.links.email.url} className="text-indigo-600 underline">{aboutConfig.connect.links.email.text}</a>
                       {afterEmail}
-                    </>
+                    </Fragment>
                   );
                 }
                 return (
-                  <>
+                  <Fragment key={index}>
                     {part}
                     <a href={aboutConfig.connect.links.twitter.url} target="_blank" className="text-indigo-600 underline">{aboutConfig.connect.links.twitter.text}</a>
-                  </>
+                  </Fragment>
                 );
               })}
             </p>

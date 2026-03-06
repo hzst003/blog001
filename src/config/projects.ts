@@ -13,13 +13,13 @@ export const projectsConfig = {
     {
       title: "Project Two",
       description: "Describe your second project here. Highlight the key features and your role in development.",
-      href: "https://https://www.baidu.com",
+      href: "https://www.baidu.com",
       imageUrl: "/assets/images/projects/project2.jpg"
     },
     {
       title: "Project Three",
       description: "Share details about your third project. What problems did it solve? What was the outcome?",
-      href: "https://https://www.baidu.com",
+      href: "https://www.baidu.com",
       imageUrl: "/assets/images/projects/project3.png"
     }
   ]
