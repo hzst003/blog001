@@ -1,12 +1,19 @@
+export type ExperienceItem = {
+  period: string;
+  role: string;
+  company: string;
+  description: string;
+};
+
 export const aboutConfig = {
   title: "",
   description: "",
   image: "/assets/images/about.jpg",
-  stats: [],
-  skills: [],
+  stats: [] as string[],
+  skills: [] as string[],
   experience: {
     title: "",
-    items: [],
+    items: [] as ExperienceItem[],
   },
   connect: {
     title: "",
