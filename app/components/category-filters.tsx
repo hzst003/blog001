@@ -1,0 +1,47 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
+import { CATEGORY_FILTERS } from '@/lib/categories';
+
+export function CategoryFilters({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const selected = root.querySelector<HTMLElement>('[data-selected="true"]');
+    selected?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+  }, [value]);
+
+  return (
+    <div
+      ref={rootRef}
+      className="flex gap-1.5 overflow-x-auto scroll-smooth px-3 [-ms-overflow-style:none] [scrollbar-width:none] sm:flex-wrap sm:gap-2 sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
+    >
+      {CATEGORY_FILTERS.map((c) => {
+        const selected = value === c;
+        return (
+          <button
+            key={c}
+            type="button"
+            data-selected={selected ? 'true' : undefined}
+            onClick={() => onChange(c)}
+            className={
+              selected
+                ? 'min-h-9 shrink-0 rounded-full bg-teal-700 px-3.5 py-1.5 text-sm font-medium text-white sm:min-h-10 sm:px-4 sm:py-2'
+                : 'min-h-9 shrink-0 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-sm font-medium text-slate-600 active:bg-slate-100 sm:min-h-10 sm:px-4 sm:py-2'
+            }
+          >
+            {c}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
