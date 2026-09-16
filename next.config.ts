@@ -38,6 +38,30 @@ const isLocalPb =
   pbHost.endsWith('.local');
 
 const nextConfig: NextConfig = {
+  async headers() {
+    return [
+      {
+        source: '/',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, max-age=0',
+          },
+          { key: 'Pragma', value: 'no-cache' },
+        ],
+      },
+      {
+        source: '/api/products',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate, max-age=0',
+          },
+          { key: 'Pragma', value: 'no-cache' },
+        ],
+      },
+    ];
+  },
   images: {
     // 商品图走同域 /api/files 代理，不再依赖浏览器直连 PocketBase
     unoptimized: true,

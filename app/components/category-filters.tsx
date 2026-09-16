@@ -15,6 +15,8 @@ export function CategoryFilters({
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
+    // display:none 的分类条（电脑版在手机上隐藏）不要滚进视口
+    if (root.offsetParent === null && getComputedStyle(root).position === 'static') return;
     const selected = root.querySelector<HTMLElement>('[data-selected="true"]');
     selected?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
   }, [value]);

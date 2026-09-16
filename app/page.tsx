@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import { getPocketBase } from '@/lib/pocketbase';
 import { StorefrontShell } from '@/app/components/storefront-shell';
-import type { GalleryProduct } from '@/app/components/product-gallery';
+import { getActiveGalleryProducts } from '@/lib/catalog';
 import { getStoreSettings, phoneToTel } from '@/lib/store-settings';
-import { productThumbUrl, productViewUrl } from '@/lib/product-images';
-import type { Product } from '@/lib/types';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getStoreSettings();
@@ -15,40 +15,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const pb = await getPocketBase();
   const settings = await getStoreSettings();
   const tel = phoneToTel(settings.phone);
-
-  let products: Product[] = [];
-  let loadError = false;
-  try {
-    products = await pb.collection('products').getFullList<Product>({
-      filter: 'active = true',
-      sort: '-created',
-    });
-  } catch (err) {
-    console.error('[HomePage] products', err);
-    try {
-      products = await pb.collection('products').getFullList<Product>({
-        filter: 'active = true',
-        sort: '-id',
-      });
-    } catch (err2) {
-      console.error('[HomePage] products fallback', err2);
-      products = [];
-      loadError = true;
-    }
-  }
-
-  const galleryItems: GalleryProduct[] = products.map((p) => ({
-    id: p.id,
-    title: p.title,
-    price: p.price,
-    description: p.description,
-    category: p.category,
-    thumbUrl: productThumbUrl(pb, p),
-    imageUrl: productViewUrl(pb, p),
-  }));
+  const { products: galleryItems, loadError } = await getActiveGalleryProducts();
 
   const hero = (
     <section key="storefront-hero" className="mb-3 text-center sm:mb-8">

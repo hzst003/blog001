@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { CategoryFilters } from '@/app/components/category-filters';
 import { ProductGallery, type GalleryProduct } from '@/app/components/product-gallery';
 
@@ -16,6 +16,46 @@ export function StorefrontShell({
   footer: ReactNode;
 }) {
   const [filter, setFilter] = useState('全部');
+  const [items, setItems] = useState(products);
+
+  useEffect(() => {
+    setItems(products);
+  }, [products]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function refresh() {
+      try {
+        const res = await fetch(`/api/products?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { Pragma: 'no-cache' },
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as { products?: GalleryProduct[] };
+        if (!cancelled && Array.isArray(data.products)) {
+          setItems(data.products);
+        }
+      } catch {
+        /* keep current list */
+      }
+    }
+
+    function onShow() {
+      if (document.visibilityState === 'visible') refresh();
+    }
+
+    refresh();
+    document.addEventListener('visibilitychange', onShow);
+    window.addEventListener('pageshow', onShow);
+    window.addEventListener('focus', onShow);
+    return () => {
+      cancelled = true;
+      document.removeEventListener('visibilitychange', onShow);
+      window.removeEventListener('pageshow', onShow);
+      window.removeEventListener('focus', onShow);
+    };
+  }, []);
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -38,7 +78,7 @@ export function StorefrontShell({
           <CategoryFilters value={filter} onChange={setFilter} />
         </div>
         <ProductGallery
-          products={products}
+          products={items}
           filter={filter}
           onFilterChange={setFilter}
           hideFilters
