@@ -39,6 +39,8 @@ const isLocalPb =
 
 const nextConfig: NextConfig = {
   images: {
+    // 商品图走同域 /api/files 代理，不再依赖浏览器直连 PocketBase
+    unoptimized: true,
     // Next 16 默认拦截私网 IP；本地 PocketBase 需要放开
     dangerouslyAllowLocalIP: isLocalPb,
     remotePatterns: pocketbaseRemotePatterns(),
