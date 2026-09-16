@@ -88,11 +88,15 @@ export default async function HomePage() {
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-white/90 sm:hidden pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <div className="mx-auto flex max-w-5xl items-center gap-2 text-xs leading-snug text-slate-600">
-          <span className="shrink-0 tabular-nums text-slate-500">{settings.hours}</span>
-          <span className="text-slate-300" aria-hidden>
-            ·
+          <span className="min-w-0 truncate tabular-nums text-slate-500">
+            营业时间：{settings.hours}
           </span>
-          <span className="min-w-0 truncate text-slate-700">{settings.address}</span>
+          <a
+            href="/admin"
+            className="ml-auto inline-flex min-h-9 shrink-0 items-center rounded-lg bg-teal-700 px-3 text-sm font-medium text-white"
+          >
+            商品管理
+          </a>
         </div>
       </div>
     </div>
