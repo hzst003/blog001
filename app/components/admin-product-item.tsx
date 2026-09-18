@@ -37,7 +37,7 @@ export function AdminProductItem({
         open={open}
         onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}
       >
-        <summary className="flex cursor-pointer list-none items-center gap-3 p-3 sm:cursor-default sm:p-4 [&::-webkit-details-marker]:hidden">
+        <summary className="flex min-h-16 cursor-pointer list-none items-center gap-3 p-3 sm:min-h-0 sm:cursor-default sm:p-4 [&::-webkit-details-marker]:hidden">
           <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg sm:h-24 sm:w-24">
             {thumbUrl ? (
               <Image

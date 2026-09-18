@@ -8,6 +8,7 @@ type Props = {
   action: (formData: FormData) => Promise<void>;
   className?: string;
   children: ReactNode;
+  requireImage?: boolean;
 };
 
 function toUploadFile(value: FormDataEntryValue): File | null {
@@ -29,7 +30,7 @@ function isNextRedirect(err: unknown) {
 }
 
 /** 提交前压缩 name="image"，再调用服务端 action（走原生 form action，保证文件能传到服务端） */
-export function CompressImageForm({ action, className, children }: Props) {
+export function CompressImageForm({ action, className, children, requireImage }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,12 +40,18 @@ export function CompressImageForm({ action, className, children }: Props) {
     setPending(true);
     try {
       const raw = fd.get('image');
-      if (raw != null) {
-        const file = toUploadFile(raw);
-        if (file) {
-          const compressed = await compressImageForUpload(file);
-          fd.set('image', compressed);
-        }
+      const file = raw != null ? toUploadFile(raw) : null;
+      if (requireImage && !file) {
+        setError('请先拍照或从相册选图');
+        setPending(false);
+        return;
+      }
+      if (file) {
+        const compressed =
+          file.name.endsWith('-sm.jpg') && file.size < 400_000
+            ? file
+            : await compressImageForUpload(file);
+        fd.set('image', compressed);
       }
       await action(fd);
       router.refresh();
@@ -59,7 +66,7 @@ export function CompressImageForm({ action, className, children }: Props) {
   return (
     <form action={handleAction} className={className} aria-busy={pending}>
       {children}
-      {pending ? <p className="text-sm text-slate-500 sm:col-span-2">正在处理图片…</p> : null}
+      {pending ? <p className="text-sm text-slate-500 sm:col-span-2">正在保存小图…</p> : null}
       {error ? <p className="text-sm text-red-600 sm:col-span-2">{error}</p> : null}
     </form>
   );

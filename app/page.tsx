@@ -20,13 +20,15 @@ export default async function HomePage() {
   const { products: galleryItems, loadError } = await getActiveGalleryProducts();
 
   const hero = (
-    <section key="storefront-hero" className="mb-3 text-center sm:mb-8">
-      <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-2xl">精选商品</h2>
-      <p className="mt-0.5 text-xs text-slate-500 sm:mt-1 sm:text-sm">酒水 · 啤酒 · 饮料</p>
+    <section key="storefront-hero" className="text-center">
+      <div className="mb-8 hidden sm:block">
+        <h2 className="text-lg font-semibold tracking-tight text-slate-900 sm:text-2xl">精选商品</h2>
+        <p className="mt-1 text-sm text-slate-500">酒水 · 啤酒 · 饮料</p>
+      </div>
       {loadError ? (
-        <p className="mt-6 text-sm text-slate-400 sm:mt-8">商品加载失败，请稍后重试</p>
+        <p className="mb-4 text-sm text-slate-400 sm:mb-0 sm:mt-8">商品加载失败，请稍后重试</p>
       ) : galleryItems.length === 0 ? (
-        <p className="mt-6 text-sm text-slate-400 sm:mt-8">暂无上架商品</p>
+        <p className="mb-4 text-sm text-slate-400 sm:mb-0 sm:mt-8">暂无上架商品</p>
       ) : null}
     </section>
   );
@@ -55,17 +57,21 @@ export default async function HomePage() {
         </div>
       </footer>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-white/90 sm:hidden pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        <div className="mx-auto flex max-w-5xl items-center gap-2 text-xs leading-snug text-slate-600">
-          <span className="min-w-0 truncate tabular-nums text-slate-500">
-            营业时间：{settings.hours}
-          </span>
-          <a
-            href="/admin"
-            className="ml-auto inline-flex min-h-9 shrink-0 items-center rounded-lg bg-teal-700 px-3 text-sm font-medium text-white"
-          >
-            商品管理
-          </a>
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:hidden">
+        <div className="pointer-events-auto mx-auto flex max-w-5xl items-center gap-3 rounded-2xl border border-slate-200/80 bg-white/95 px-3 py-2.5 shadow-[0_10px_32px_rgba(15,23,42,0.16)] backdrop-blur supports-[backdrop-filter]:bg-white/90">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-slate-800">{settings.address}</p>
+            <p className="truncate text-xs tabular-nums text-slate-500">营业 {settings.hours}</p>
+          </div>
+          {tel ? (
+            <a href={tel} className="ui-btn shrink-0 px-5 shadow-md shadow-teal-700/25">
+              打电话
+            </a>
+          ) : (
+            <a href="/admin" className="ui-btn shrink-0 px-5 shadow-md shadow-teal-700/25">
+              商品管理
+            </a>
+          )}
         </div>
       </div>
     </div>
@@ -77,6 +83,8 @@ export default async function HomePage() {
       products={loadError ? [] : galleryItems}
       hero={hero}
       footer={footer}
+      contactTel={tel}
+      contactPhone={settings.phone}
     />
   );
 }

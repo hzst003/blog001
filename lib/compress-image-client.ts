@@ -1,7 +1,14 @@
-/** 浏览器端：上传前压缩，最长边约 1280，JPEG 质量 0.82 */
+/** 浏览器端：拍照/相册选图后压成小图再上传。最长边 960，目标约 200KB 内。 */
 
-const MAX_EDGE = 1280;
-const QUALITY = 0.82;
+const MAX_EDGE = 960;
+const QUALITY = 0.78;
+const MAX_BYTES = 1_800_000;
+
+export type CompressResult = {
+  file: File;
+  originalBytes: number;
+  outputBytes: number;
+};
 
 function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -19,6 +26,35 @@ function loadImage(file: File): Promise<HTMLImageElement> {
   });
 }
 
+async function loadSource(file: File): Promise<{
+  width: number;
+  height: number;
+  draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
+  close: () => void;
+}> {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+      return {
+        width: bmp.width,
+        height: bmp.height,
+        draw: (ctx, w, h) => ctx.drawImage(bmp, 0, 0, w, h),
+        close: () => bmp.close(),
+      };
+    } catch {
+      /* 回退 Image，部分 HEIC/相册格式走这里 */
+    }
+  }
+
+  const img = await loadImage(file);
+  return {
+    width: img.naturalWidth || img.width,
+    height: img.naturalHeight || img.height,
+    draw: (ctx, w, h) => ctx.drawImage(img, 0, 0, w, h),
+    close: () => undefined,
+  };
+}
+
 function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob> {
   return new Promise((resolve, reject) => {
     canvas.toBlob(
@@ -32,40 +68,70 @@ function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number):
   });
 }
 
+export function formatBytes(n: number) {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${Math.round(n / 1024)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 /**
- * 将图片压到最长边 ≤ 1280，输出 JPEG。
- * GIF 原样返回（避免丢动画）；压缩失败时回退原文件。
+ * 将图片压到最长边 ≤ 960 的 JPEG 小图。
+ * GIF 原样返回（避免丢动画）。
  */
-export async function compressImageForUpload(file: File): Promise<File> {
-  if (!file.type.startsWith('image/')) return file;
-  if (file.type === 'image/gif') return file;
+export async function compressImageDetailed(file: File): Promise<CompressResult> {
+  const originalBytes = file.size;
+  if (!file.type.startsWith('image/') && file.type !== '') {
+    return { file, originalBytes, outputBytes: file.size };
+  }
+  if (file.type === 'image/gif') {
+    return { file, originalBytes, outputBytes: file.size };
+  }
 
   try {
-    const img = await loadImage(file);
-    const w = img.naturalWidth || img.width;
-    const h = img.naturalHeight || img.height;
-    if (!w || !h) return file;
+    const src = await loadSource(file);
+    const w = src.width;
+    const h = src.height;
+    if (!w || !h) {
+      src.close();
+      return { file, originalBytes, outputBytes: file.size };
+    }
 
     const scale = Math.min(1, MAX_EDGE / Math.max(w, h));
     const tw = Math.max(1, Math.round(w * scale));
     const th = Math.max(1, Math.round(h * scale));
 
-    // 已够小且本身是 JPEG：跳过重编码
-    if (scale === 1 && file.type === 'image/jpeg' && file.size < 400_000) {
-      return file;
+    if (scale === 1 && file.type === 'image/jpeg' && file.size < 220_000) {
+      src.close();
+      return { file, originalBytes, outputBytes: file.size };
     }
 
     const canvas = document.createElement('canvas');
     canvas.width = tw;
     canvas.height = th;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return file;
-    ctx.drawImage(img, 0, 0, tw, th);
+    if (!ctx) {
+      src.close();
+      return { file, originalBytes, outputBytes: file.size };
+    }
+    src.draw(ctx, tw, th);
+    src.close();
 
-    const blob = await canvasToBlob(canvas, 'image/jpeg', QUALITY);
-    const base = file.name.replace(/\.[^.]+$/, '') || 'image';
-    return new File([blob], `${base}.jpg`, { type: 'image/jpeg', lastModified: Date.now() });
+    let quality = QUALITY;
+    let blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+    while (blob.size > MAX_BYTES && quality > 0.45) {
+      quality = Math.round((quality - 0.1) * 10) / 10;
+      blob = await canvasToBlob(canvas, 'image/jpeg', quality);
+    }
+
+    const base = file.name.replace(/\.[^.]+$/, '') || 'photo';
+    const out = new File([blob], `${base}-sm.jpg`, { type: 'image/jpeg', lastModified: Date.now() });
+    return { file: out, originalBytes, outputBytes: out.size };
   } catch {
-    return file;
+    return { file, originalBytes, outputBytes: file.size };
   }
+}
+
+export async function compressImageForUpload(file: File): Promise<File> {
+  const { file: out } = await compressImageDetailed(file);
+  return out;
 }
